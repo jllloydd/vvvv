@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Will you be my Valentine?</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Arimo:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: 'Arimo', sans-serif; }
+
+    @keyframes modal-overlay-in {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes modal-content-in {
+      from {
+        opacity: 0;
+        transform: scale(0.9);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+    .modal-overlay-animate {
+      animation: modal-overlay-in 0.2s ease-out forwards;
+    }
+    .modal-content-animate {
+      animation: modal-content-in 0.25s ease-out forwards;
+    }
+
+    /* Custom sizing with absolute positioning for Snoopy image */
+    .snoopy-wrap {
+      position: relative;
+    }
+    .snoopy-img {
+      position: absolute;
+      width: 32rem;
+      max-width: none !important; /* override Tailwind preflight so custom width applies */
+      height: auto;
+      object-fit: contain;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    /* Mobile only: custom positioning */
+    @media (max-width: 1023px) {
+      .snoopy-img {
+        bottom: 20%;
+        top: -30%;
+      }
+    }
+    /* Desktop (lg and up): different positioning */
+    @media (min-width: 1024px) {
+      .snoopy-img {
+        width: 60rem;
+        top: auto;
+        bottom: auto;
+      }
+    }
+
+    /* Floating hearts background */
+    #hearts-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .content-layer {
+      position: relative;
+      z-index: 1;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-rose-100 via-pink-50 to-red-100 antialiased overflow-x-hidden">
+  <!-- Floating hearts canvas -->
+  <canvas id="hearts-canvas"></canvas>
+
+  <div class="content-layer min-h-screen max-h-screen flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-16 px-6 py-10 overflow-hidden">
+    <!-- Left: Image – custom sizing, absolute positioning; overflow hidden so image doesn't cause page scroll -->
+    <div class="snoopy-wrap w-full lg:w-1/3 order-1 lg:order-1 flex items-center justify-center min-h-[18rem] lg:min-h-[28rem] overflow-hidden">
+      <img src="./snoopy 0.png" alt="Snoopy" class="snoopy-img rounded-lg" />
+    </div>
+
+    <!-- Right: Main message + buttons (below image on mobile, right on desktop) -->
+    <div class="w-full lg:w-1/2 max-w-lg order-2 lg:order-2 flex flex-col items-center lg:items-end">
+      <h1 class="text-3xl md:text-[3vw] lg:text-[3vw] font-bold text-rose-700 tracking-tighter text-center lg:text-right mb-8 drop-shadow-sm leading-[1]">
+        will you be my valentine?
+      </h1>
+
+      <div class="flex flex-wrap gap-3 justify-center lg:justify-end mb-6">
+        <!-- YES buttons -->
+        <button
+          type="button"
+          data-open-modal
+          class="px-2 py-1 rounded-md tracking-tighter bg-rose-500 hover:bg-rose-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 active:scale-95"
+        >
+          yes!
+        </button>
+        <button
+          type="button"
+          data-open-modal
+          class="px-2.5 py-1.5 rounded-md  tracking-tighter bg-rose-500 hover:bg-rose-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 active:scale-95"
+        >
+          YES DADDY!!!
+        </button>
+        <button
+          type="button"
+          data-open-modal
+          class="px-2.5 py-1.5 rounded-md tracking-tighter bg-rose-500 hover:bg-rose-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 active:scale-95"
+        >
+          yes yes to the yo
+        </button>
+        <button
+          type="button"
+          data-open-modal
+          class="px-2.5 py-1.5 rounded-md  tracking-tighter bg-rose-500 hover:bg-rose-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 active:scale-95"
+        >
+          HELL YESSSSS
+        </button>
+        <!-- HELL NAH - runs away on hover (desktop) or tap (mobile); moves around full viewport -->
+        <button
+          type="button"
+          id="hell-nah"
+          class="px-2.5 py-1.5 rounded-md tracking-tighter bg-slate-400 hover:bg-slate-500 text-white font-semibold shadow transition-all duration-150 z-10"
+        >
+          hell nah u ugly as hell
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div
+    id="modal"
+    class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+    aria-hidden="true"
+  >
+    <div id="modal-content" class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
+      <div class="p-8 text-center">
+        <p class="text-2xl md:text-4xl tracking-tighter font-bold text-rose-600 mb-6">DAPAT LANG!!</p>
+        <img src="./snoopy 2.gif" alt="Snoopy" class="w-full max-w-xs mx-auto rounded-lg mb-6" />
+        <p class="text-lg tracking-tighter text-rose-800">See you on the 14th! love ya!!!</p>
+      </div>
+      <button
+        type="button"
+        id="close-modal"
+        class="w-full py-3 bg-rose-100 hover:bg-rose-200 text-rose-700 font-medium transition-colors"
+      >
+        Close
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // ===== FLOATING HEARTS ANIMATION =====
+    const canvas = document.getElementById('hearts-canvas');
+    const ctx = canvas.getContext('2d');
+
+    // Set canvas size
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    // Heart colors (pixel art style)
+    const heartColors = [
+      '#ff1744', // bright red
+      '#f50057', // pink red
+      '#ff4081', // pink
+      '#e91e63', // deep pink
+      '#ec407a'  // medium pink
+    ];
+
+    // Create pixel heart shape on canvas
+    function drawPixelHeart(x, y, size, color) {
+      const pixelSize = size / 8;
+      ctx.fillStyle = color;
+
+      // Pixel heart pattern (8x8 grid)
+      const pattern = [
+        [0,1,1,0,0,1,1,0],
+        [1,1,1,1,1,1,1,1],
+        [1,1,1,1,1,1,1,1],
+        [1,1,1,1,1,1,1,1],
+        [0,1,1,1,1,1,1,0],
+        [0,0,1,1,1,1,0,0],
+        [0,0,0,1,1,0,0,0],
+        [0,0,0,0,0,0,0,0]
+      ];
+
+      for (let row = 0; row < 8; row++) {
+        for (let col = 0; col < 8; col++) {
+          if (pattern[row][col] === 1) {
+            ctx.fillRect(
+              x + col * pixelSize,
+              y + row * pixelSize,
+              pixelSize,
+              pixelSize
+            );
+          }
+        }
+      }
+    }
+
+    // Heart class with bouncing behavior
+    class Heart {
+      constructor() {
+        this.size = 20 + Math.random() * 30; // Random size between 20-50px
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.vx = (Math.random() - 0.5) * 3; // Random velocity x
+        this.vy = (Math.random() - 0.5) * 3; // Random velocity y
+        this.color = heartColors[Math.floor(Math.random() * heartColors.length)];
+        this.opacity = 0.3 + Math.random() * 0.4; // 0.3 to 0.7
+      }
+
+      update() {
+        // Move heart
+        this.x += this.vx;
+        this.y += this.vy;
+
+        // Bounce off edges
+        if (this.x <= 0 || this.x + this.size >= canvas.width) {
+          this.vx *= -1;
+          this.x = Math.max(0, Math.min(this.x, canvas.width - this.size));
+        }
+        if (this.y <= 0 || this.y + this.size >= canvas.height) {
+          this.vy *= -1;
+          this.y = Math.max(0, Math.min(this.y, canvas.height - this.size));
+        }
+      }
+
+      draw() {
+        ctx.globalAlpha = this.opacity;
+        drawPixelHeart(this.x, this.y, this.size, this.color);
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    // Create hearts
+    const hearts = [];
+    const heartCount = 15; // Number of floating hearts
+
+    for (let i = 0; i < heartCount; i++) {
+      hearts.push(new Heart());
+    }
+
+    // Animation loop
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      hearts.forEach(heart => {
+        heart.update();
+        heart.draw();
+      });
+
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+
+    // ===== MODAL FUNCTIONALITY =====
+    const modal = document.getElementById('modal');
+    const openModalBtns = document.querySelectorAll('[data-open-modal]');
+    const closeModalBtn = document.getElementById('close-modal');
+    const hellNahBtn = document.getElementById('hell-nah');
+
+    const modalContent = document.getElementById('modal-content');
+
+    function openModal() {
+      modal.classList.remove('hidden');
+      modal.classList.add('flex', 'modal-overlay-animate');
+      modalContent.classList.add('modal-content-animate');
+      modal.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+      modal.classList.remove('flex', 'modal-overlay-animate');
+      modalContent.classList.remove('modal-content-animate');
+      modal.classList.add('hidden');
+      modal.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+    }
+
+    openModalBtns.forEach(btn => btn.addEventListener('click', openModal));
+    closeModalBtn.addEventListener('click', closeModal);
+
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeModal();
+    });
+
+    // ===== HELL NAH BUTTON =====
+    const isTouchDevice = () => 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    let hellNahReleased = false;
+
+    function moveHellNah() {
+      const padding = 12;
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+
+      // First time: switch to fixed and append to body so it moves in viewport without clipping
+      if (!hellNahReleased) {
+        hellNahReleased = true;
+        document.body.appendChild(hellNahBtn);
+        hellNahBtn.style.position = 'fixed';
+        hellNahBtn.style.left = '';
+        hellNahBtn.style.top = '';
+      }
+
+      const btnRect = hellNahBtn.getBoundingClientRect();
+      const maxX = vw - btnRect.width - padding * 2;
+      const maxY = vh - btnRect.height - padding * 2;
+      const x = padding + Math.random() * Math.max(0, maxX);
+      const y = padding + Math.random() * Math.max(0, maxY);
+
+      hellNahBtn.style.left = x + 'px';
+      hellNahBtn.style.top = y + 'px';
+    }
+
+    if (isTouchDevice()) {
+      hellNahBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        moveHellNah();
+      });
+    } else {
+      hellNahBtn.addEventListener('mouseenter', moveHellNah);
+    }
+  </script>
+</body>
+</html>
